@@ -1,0 +1,174 @@
+do
+local p={[1]="\080\108\097\121\101\114\115",[2]="\082\117\110\083\101\114\118\105\099\101",[3]="\068\114\097\119\105\110\103",[4]="\083\113\117\097\114\101",[5]="\076\105\110\101",[6]="\084\101\120\116",[7]="\072\101\097\100",[8]="\072\117\109\097\110\111\105\100\082\111\111\116\080\097\114\116",[9]="\072\117\109\097\110\111\105\100"}
+local function q(i)return p[i]end
+local g=game
+local s=function(x)return g:GetService(q(x))end
+
+local A=s(1)
+local B=s(2)
+local C=workspace.CurrentCamera
+local L=A.LocalPlayer
+local R=game:GetService("RunService")
+
+local a=true
+local b=true
+local c=true
+local d=100
+local e=.8
+local f=24
+
+local function m()
+local v=C.ViewportSize
+return Vector2.new(v.X/2,v.Y/2)
+end
+
+local function n()
+local v=C.ViewportSize
+return Vector2.new(v.X/2,v.Y-6)
+end
+
+local function o()
+return Color3.fromHSV((tick()*0.15)%1,1,1)
+end
+
+local function w(pos)
+local v,on=C:WorldToViewportPoint(pos)
+return Vector2.new(v.X,v.Y),on,v.Z
+end
+
+local function vis(pt)
+local o0=C.CFrame.Position
+local d0=pt.Position-o0
+local rp=RaycastParams.new()
+rp.FilterType=Enum.RaycastFilterType.Blacklist
+rp.FilterDescendantsInstances={L.Character,pt.Parent}
+rp.IgnoreWater=true
+local r0=workspace:Raycast(o0,d0,rp)
+if r0 then
+return r0.Instance:IsDescendantOf(pt.Parent)
+end
+return true
+end
+
+local E={}
+local function ce(pl)
+local bx=Drawing.new(q(4))
+bx.Thickness=1
+bx.Filled=false
+local ln=Drawing.new(q(5))
+ln.Thickness=1
+local tx=Drawing.new(q(6))
+tx.Size=12
+tx.Center=true
+tx.Outline=true
+E[pl]={bx,ln,tx}
+end
+
+local function re(pl)
+if E[pl] then
+for _,v in pairs(E[pl])do v:Remove()end
+E[pl]=nil
+end
+end
+
+for _,pl in pairs(A:GetPlayers())do
+if pl~=L then ce(pl)end
+end
+A.PlayerAdded:Connect(ce)
+A.PlayerRemoving:Connect(re)
+
+local F=Drawing.new("Circle")
+F.Thickness=1
+F.Filled=false
+F.Visible=c
+
+R.RenderStepped:Connect(function()
+if L.Character and L.Character:FindFirstChildOfClass(q(9)) then
+L.Character:FindFirstChildOfClass(q(9)).WalkSpeed=f
+end
+end)
+
+local T=nil
+
+local function gt()
+local cen=m()
+local best,dist=nil,1e9
+for _,pl in pairs(A:GetPlayers())do
+if pl~=L and pl.Character and pl.Character:FindFirstChild(q(7)) then
+local h=pl.Character[q(7)]
+local p0,on=w(h.Position)
+if on then
+local d0=(p0-cen).Magnitude
+if d0<=d and d0<dist and vis(h) then
+dist=d0
+best=h
+end
+end
+end
+end
+return best
+end
+
+R.RenderStepped:Connect(function()
+local cen=m()
+local bot=n()
+local col=o()
+
+F.Visible=c
+if c then
+F.Position=cen
+F.Radius=d
+F.Color=col
+end
+
+for pl,v in pairs(E)do
+local ch=pl.Character
+if b and ch and ch:FindFirstChild(q(7)) and ch:FindFirstChild(q(8)) then
+local hm=ch:FindFirstChildOfClass(q(9))
+if hm and hm.Health>0 then
+local hd=ch[q(7)]
+local rp=ch[q(8)]
+local hp,on,z=w(hd.Position)
+local rp2=C:WorldToViewportPoint(rp.Position)
+if on and z>0 then
+local h=math.clamp(1600/z,30,220)
+local w0=h*.45
+v[1].Visible=true
+v[1].Color=col
+v[1].Size=Vector2.new(w0,h)
+v[1].Position=Vector2.new(rp2.X-w0/2,rp2.Y-h/2)
+v[2].Visible=true
+v[2].Color=col
+v[2].From=Vector2.new(rp2.X,rp2.Y+h/2)
+v[2].To=bot
+v[3].Visible=true
+v[3].Text=math.floor((C.CFrame.Position-rp.Position).Magnitude).." m"
+v[3].Position=Vector2.new(rp2.X,rp2.Y+h/2+12)
+else
+for _,x in pairs(v)do x.Visible=false end
+end
+else
+for _,x in pairs(v)do x.Visible=false end
+end
+else
+for _,x in pairs(v)do x.Visible=false end
+end
+end
+
+if a then
+if T then
+local ch=T.Parent
+local hm=ch and ch:FindFirstChildOfClass(q(9))
+local p0,on=w(T.Position)
+if not hm or hm.Health<=0 or not on or (p0-cen).Magnitude>d or not vis(T) then
+T=nil
+end
+end
+if not T then T=gt() end
+if T then
+local cf=CFrame.new(C.CFrame.Position,T.Position)
+C.CFrame=C.CFrame:Lerp(cf,e)
+end
+end
+end)
+end
